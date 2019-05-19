@@ -100,7 +100,7 @@ public class Server : MonoBehaviour
         }
     }
 
-    #region Receive
+    #region Requests
     private void OnData(int cnnId, int channelId, NetMsg msg)
     {
         switch (msg.OperationCode)
@@ -443,7 +443,7 @@ public class Server : MonoBehaviour
     }
     #endregion
 
-    #region Send
+    #region Responses
     public void SendClient(int cnnId, NetMsg msg)
     {
         if (cnnId == 0)

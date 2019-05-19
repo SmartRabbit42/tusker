@@ -623,6 +623,9 @@ public class Data
         if (account == null)
             return 2;
 
+        if (account.Status != 1)
+            return 3;
+
         account.Status = 2;
         account.Priority = 2;
         account.PartyToken = partyToken;

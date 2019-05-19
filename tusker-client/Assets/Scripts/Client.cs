@@ -94,7 +94,7 @@ public class Client : MonoBehaviour
         }
     }
 
-    #region Receive
+    #region Responses
     private void OnData(int cnnId, int channelId, int recHostId, NetMsg msg)
     {
         switch (msg.OperationCode)
@@ -120,7 +120,7 @@ public class Client : MonoBehaviour
                 OnFullAccountRequest((Net_OnFullAccountRequest)msg);
                 break;
             case NetOP.OnScreennameChangeRequest:
-                OnScreenNameChangeRequest((Net_OnScreennameChangeRequest)msg);
+                OnScreennameChangeRequest((Net_OnScreennameChangeRequest)msg);
                 break;
             
             //Friends
@@ -183,7 +183,7 @@ public class Client : MonoBehaviour
     //Basic
     private void OnConnect(Net_OnConnect oc)
     {
-        Debug.Log(LogManager.ConnectEvent(oc.FlagEnum));
+        Debug.Log(LogManager.OnConnect(oc.FlagEnum));
         Handler.Instance.OnConnect(oc.FlagEnum, oc.Message);
     }
     private void OnDisconnect()
@@ -194,194 +194,58 @@ public class Client : MonoBehaviour
     //Autentication
     private void OnSignUpRequest(Net_OnSignUpRequest osr)
     {
-        switch (osr.FlagEnum)
-        {
-            default:
-            case 0:
-                Debug.LogError("Failed SignUp: Unespected error");
-                Handler.Instance.OnSignUpRequest(0);
-                break;
-            case 1:
-                Debug.Log("Successfull SignUp");
-                Handler.Instance.OnSignUpRequest(1);
-                break;
-            case 2:
-                Debug.Log("Failed SignUp: Invalid email");
-                Handler.Instance.OnSignUpRequest(2);
-                break;
-            case 3:
-                Debug.Log("Failed SignUp: Invalid username");
-                Handler.Instance.OnSignUpRequest(3);
-                break;
-            case 4:
-                Debug.Log("Failed SignUp: Email already in use");
-                Handler.Instance.OnSignUpRequest(4);
-                break;
-            case 5:
-                Debug.Log("Failed SignUp: Username already in use");
-                Handler.Instance.OnSignUpRequest(5);
-                break;
-        }
+        Debug.Log(LogManager.OnSignUpRequest(osr.FlagEnum));
+        Handler.Instance.OnSignUpRequest(osr.FlagEnum);
     }
     private void OnLoginRequest(Net_OnLoginRequest olr)
     {
-        switch (olr.FlagEnum)
+        Debug.Log(LogManager.OnLoginRequest(olr.FlagEnum));
+        Handler.Instance.OnLoginRequest(olr.FlagEnum);
+
+        if (olr.FlagEnum == 1)
         {
-            default:
-            case 0:
-                Debug.LogError("Failed Login: Unespected error");
-                Handler.Instance.OnLoginRequest(0);
-                break;
-            case 1:
-                Debug.Log("Successfull Login");
-                Handler.Instance.OnLoginRequest(1);
+            token = olr.Token;
 
-                token = olr.Token;
+            myAccount = olr.Account;
 
-                myAccount = olr.Account;
-
-                UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
-                break;
-            case 2:
-                Debug.Log("Failed Login: Inexistent username or email");
-                Handler.Instance.OnLoginRequest(2);
-                break;
-            case 3:
-                Debug.Log("Failed Login: Incorrect password");
-                Handler.Instance.OnLoginRequest(3);
-                break;
+            UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
         }
     }
 
     //Profile
     private void OnFullAccountRequest(Net_OnFullAccountRequest ofar)
     {
-        switch (ofar.FlagEnum)
-        {
-            default:
-            case 0:
-                Debug.LogError("Failed fullAccountRequest: Unespected error");
-                Handler.Instance.OnFullAccountRequest(0, null);
-                break;
-            case 1:
-                Debug.Log("Successfull fullAccountRequest");
-                Handler.Instance.OnFullAccountRequest(1, ofar.Account);
-                break;
-            case 2:
-                Debug.Log("Failed fullAccountRequest: Inexistent token");
-                Handler.Instance.OnFullAccountRequest(2, null);
-                break;
-            case 3:
-                Debug.Log("Failed fullAccountRequest: Inexistent username");
-                if(Profile.Instance != null)
-                Handler.Instance.OnFullAccountRequest(3, null);
-                break;
-        }
+        Debug.Log(LogManager.OnFullAccountRequest(ofar.FlagEnum));
+        Handler.Instance.OnFullAccountRequest(ofar.FlagEnum, ofar.Account);
     }
-    private void OnScreenNameChangeRequest(Net_OnScreennameChangeRequest oscr)
+    private void OnScreennameChangeRequest(Net_OnScreennameChangeRequest oscr)
     {
-        switch (oscr.FlagEnum)
-        {
-            default:
-            case 0:
-                Debug.LogError("Failed ScreenNameChange: Unespected error");
-                Handler.Instance.OnScreenNameChangeRequest(0, oscr.screenname);
-                break;
-            case 1:
-                Debug.Log("Successfull ScreenNameChange");
-                myAccount.Screenname = oscr.screenname;
-                Handler.Instance.OnScreenNameChangeRequest(1, oscr.screenname);
-                break;
-            case 2:
-                Debug.Log("Failed ScreenNameChange: Inexistent token");
-                Handler.Instance.OnScreenNameChangeRequest(2, oscr.screenname);
-                break;
-            case 3:
-                Debug.Log("Failed ScreenNameChange: Invalid screenName");
-                Handler.Instance.OnScreenNameChangeRequest(3, oscr.screenname);
-                break;
-        }
+        Debug.Log(LogManager.OnScreennameChangeRequest(oscr.FlagEnum));
+        Handler.Instance.OnScreenNameChangeRequest(oscr.FlagEnum, oscr.screenname);
+
+        if (oscr.FlagEnum == 1)
+            myAccount.Screenname = oscr.screenname;
     }
 
     //Friends
     private void OnFriendListRequest(Net_OnFriendListRequest oflr)
     {
-        switch (oflr.FlagEnum)
-        {
-            default:
-            case 0:
-                Debug.LogError("Failed friendListRequest: Unespected error");
-                break;
-            case 1:
-                Debug.Log("Successfull FriendListRequest");
-                Handler.Instance.OnFriendListRequest(oflr.Friends);
-                break;
-            case 2:
-                Debug.Log("Failed FriendListRequest: Inexistent token");
-                break;
-            case 3:
-                Debug.Log("Failed FriendListRequest: No friends");
-                break;
-        }
+        Debug.Log(LogManager.OnFriendListRequest(oflr.FlagEnum));
+
+        if (oflr.FlagEnum == 1)
+            Handler.Instance.OnFriendListRequest(oflr.Friends);
     }
     private void OnFriendRequestListRequest(Net_OnFriendRequestListRequest ofrlr)
     {
-        switch (ofrlr.FlagEnum)
-        {
-            default:
-            case 0:
-                Debug.LogError("Failed FriendRequestListRequest: Unespected error");
-                break;
-            case 1:
-                Debug.Log("Successfull FriendRequestListRequest");
-                Handler.Instance.OnFriendRequestListRequest(ofrlr.FriendRequests);
-                break;
-            case 2:
-                Debug.Log("Failed FriendRequestListRequest Inexistent token");
-                break;
-            case 3:
-                Debug.Log("Failed FriendRequestListRequest No friendRequests");
-                break;
-        }
+        Debug.Log(LogManager.OnFriendRequestListRequest(ofrlr.FlagEnum));
+
+        if (ofrlr.FlagEnum == 1)
+            Handler.Instance.OnFriendRequestListRequest(ofrlr.FriendRequests);
     }
     private void OnFriendRequestSender(Net_OnFriendRequestSender ofrs)
     {
-        switch (ofrs.FlagEnum)
-        {
-            default:
-            case 0:
-                Debug.LogError("Failed friendRequest: Unespected error");
-                Handler.Instance.OnFriendRequestSender(0);
-                break;
-            case 1:
-                Debug.Log("Successfull friendRequest");
-                Handler.Instance.OnFriendRequestSender(1);
-                break;
-            case 2:
-                Debug.Log("Failed friendRequest: Invalid username");
-                Handler.Instance.OnFriendRequestSender(2);
-                break;
-            case 3:
-                Debug.Log("Failed friendRequest: Inexistent username");
-                Handler.Instance.OnFriendRequestSender(3);
-                break;
-            case 4:
-                Debug.Log("Failed friendRequest: Inexistent token");
-                Handler.Instance.OnFriendRequestSender(4);
-                break;
-            case 5:
-                Debug.Log("Failed friendRequest: Tried to befriend yourself");
-                Handler.Instance.OnFriendRequestSender(5);
-                break;
-            case 6:
-                Debug.Log("Failed friendRequest: Tried to befriend a friend");
-                Handler.Instance.OnFriendRequestSender(6);
-                break;
-            case 7:
-                Debug.Log("Failed friendRequest: Already requested");
-                Handler.Instance.OnFriendRequestSender(7);
-                break;
-        }
+        Debug.Log(LogManager.OnFriendRequestSender(ofrs.FlagEnum));
+        Handler.Instance.OnFriendRequestSender(ofrs.FlagEnum);
     }
     private void OnFriendRequestReceiver(Net_OnFriendRequestReceiver ofrr)
     {
@@ -390,42 +254,8 @@ public class Client : MonoBehaviour
     }
     private void OnFriendRequestConfirmationSender(Net_OnFriendRequestConfirmationSender ofrcs)
     {
-        switch (ofrcs.FlagEnum)
-        {
-            default:
-            case 0:
-                Debug.LogError("Failed friendRequestConfirmation: Unespected error");
-                Handler.Instance.OnFriendRequestConfirmationSender(0, null);
-                break;
-            case 1:
-                Debug.Log("Successfull friendRequestConfirmation");
-                Handler.Instance.OnFriendRequestConfirmationSender(1, ofrcs.Sender);
-                break;
-            case 2:
-                Debug.Log("Successfull friendRequestConfirmation");
-                Handler.Instance.OnFriendRequestConfirmationSender(2, ofrcs.Sender);
-                break;
-            case 3:
-                Debug.Log("Failed friendRequestConfirmation: Invalid username");
-                Handler.Instance.OnFriendRequestConfirmationSender(3, null);
-                break;
-            case 4:
-                Debug.Log("Failed friendRequestConfirmation: Inexistent token");
-                Handler.Instance.OnFriendRequestConfirmationSender(4, null);
-                break;
-            case 5:
-                Debug.Log("Failed friendRequestConfirmation: Inexistent username");
-                Handler.Instance.OnFriendRequestConfirmationSender(5, null);
-                break;
-            case 6:
-                Debug.Log("Failed friendRequestConfirmation: Tried to befriend yourself");
-                Handler.Instance.OnFriendRequestConfirmationSender(6, null);
-                break;
-            case 7:
-                Debug.Log("Failed friendRequestConfirmation: Tried to befriend a friend");
-                Handler.Instance.OnFriendRequestConfirmationSender(7, null);
-                break;
-        }
+        Debug.Log(LogManager.OnFriendRequestConfirmationSender(ofrcs.FlagEnum));
+        Handler.Instance.OnFriendRequestConfirmationSender(ofrcs.FlagEnum, ofrcs.Sender);
     }
     private void OnFriendRequestConfirmationReceiver(Net_OnFriendRequestConfirmationReceiver ofrcr)
     {
@@ -434,22 +264,8 @@ public class Client : MonoBehaviour
     }
     private void OnFriendRemovalRequestSender(Net_OnFriendRemovalRequestSender ofrrs)
     {
-        switch (ofrrs.FlagEnum)
-        {
-            default:
-            case 0:
-                Debug.LogError("Failed friendRemovalRequest: Unespected error");
-                Handler.Instance.OnFriendRemovalRequestSender(0, "");
-                break;
-            case 1:
-                Debug.Log("Successfull friendRemovalRequest");
-                Handler.Instance.OnFriendRemovalRequestSender(1, ofrrs.ReceiverUsername);
-                break;
-            case 2:
-                Debug.Log("Failed friendRemovalRequest: Inexistent friendship");
-                Handler.Instance.OnFriendRemovalRequestSender(2, "");
-                break;
-        }
+        Debug.Log(LogManager.OnFriendRemovalRequestSender(ofrrs.FlagEnum));
+        Handler.Instance.OnFriendRemovalRequestSender(ofrrs.FlagEnum, ofrrs.ReceiverUsername);
     }
     private void OnFriendRemovalRequestReceiver(Net_OnFriendRemovalRequestReceiver ofrrr)
     {
@@ -468,74 +284,16 @@ public class Client : MonoBehaviour
     //Party
     private void OnCreatePartyRequest(Net_OnCreatePartyRequest ocpr)
     {
-        switch (ocpr.FlagEnum)
-        {
-            default:
-            case 0:
-                Debug.Log("Failed createPartyRequest: Unespected error");
-                Handler.Instance.OnCreatePartyRequest(0, null);
-                break;
-            case 1:
-                Debug.Log("Successfull createPartyRequest");
-                myAccount.Status = 2;
-                Handler.Instance.OnCreatePartyRequest(1, ocpr.PartyToken);
-                break;
-            case 2:
-                Debug.Log("Failed createPartyRequest: Inexistent token");
-                Handler.Instance.OnCreatePartyRequest(2, null);
-                break;
-            case 3:
-                Debug.Log("Failed createPartyRequest: Already in a party");
-                Handler.Instance.OnCreatePartyRequest(3, null);
-                break;
-        }
+        Debug.Log(LogManager.OnCreatePartyRequest(ocpr.FlagEnum));
+        Handler.Instance.OnCreatePartyRequest(ocpr.FlagEnum, ocpr.PartyToken);
+
+        if (ocpr.FlagEnum == 1)
+            myAccount.Status = 2;
     }
     private void OnPartyRequestSender(Net_OnPartyRequestSender opirr)
     {
-        switch (opirr.FlagEnum)
-        {
-            default:
-            case 0:
-                Debug.LogError("Failed partyRequest: Unespected error");
-                Handler.Instance.OnPartyRequestSender(0);
-                break;
-            case 1:
-                Debug.Log("Successfull partyRequest");
-                Handler.Instance.OnPartyRequestSender(1);
-                break;
-            case 2:
-                Debug.Log("Failed partyRequest: Invalid username");
-                Handler.Instance.OnPartyRequestSender(2);
-                break;
-            case 3:
-                Debug.Log("Failed partyRequest: Inexistent token");
-                Handler.Instance.OnPartyRequestSender(3);
-                break;
-            case 4:
-                Debug.Log("Failed partyRequest: Inexistent username");
-                Handler.Instance.OnPartyRequestSender(4);
-                break;
-            case 5:
-                Debug.Log("Failed partyRequest: Trying to invite yourself");
-                Handler.Instance.OnPartyRequestSender(5);
-                break;
-            case 6:
-                Debug.Log("Failed partyRequest: You are not in a party");
-                Handler.Instance.OnPartyRequestSender(6);
-                break;
-            case 7:
-                Debug.Log("Failed partyRequest: Receiver not available");
-                Handler.Instance.OnPartyRequestSender(7);
-                break;
-            case 8:
-                Debug.Log("Failed partyRequest: Inexistent partyToken");
-                Handler.Instance.OnPartyRequestSender(8);
-                break;
-            case 9:
-                Debug.Log("Failed partyRequest: Already requested");
-                Handler.Instance.OnPartyRequestSender(9);
-                break;
-        }
+        Debug.Log(LogManager.OnPartyRequestSender(opirr.FlagEnum));
+        Handler.Instance.OnPartyRequestSender(opirr.FlagEnum);
     }
     private void OnPartyRequestReceiver(Net_OnPartyRequestReceiver opirr)
     {
@@ -544,54 +302,11 @@ public class Client : MonoBehaviour
     }
     private void OnPartyRequestConfirmationSender(Net_OnPartyRequestConfirmationSender oprcs)
     {
-        switch (oprcs.FlagEnum)
-        {
-            case 0:
-                Debug.Log("Failed partyRequestConfirmation: Unespected error");
-                Handler.Instance.OnPartyRequestConfirmationSender(0, null);
-                break;
-            case 1:
-                Debug.Log("Successfull partyRequestConfirmation");
-                myAccount.Status = 2;
-                Handler.Instance.OnPartyRequestConfirmationSender(1, oprcs.PartyToken);
-                break;
-            case 2:
-                Debug.Log("Successfull partyRequestConfirmation");
-                Handler.Instance.OnPartyRequestConfirmationSender(2, oprcs.PartyToken);
-                break;
-            case 3:
-                Debug.Log("Failed partyRequestConfirmation: Invalid username");
-                Handler.Instance.OnPartyRequestConfirmationSender(3, oprcs.PartyToken);
-                break;
-            case 4:
-                Debug.Log("Failed partyRequestConfirmation: Inexistent username");
-                Handler.Instance.OnPartyRequestConfirmationSender(4, oprcs.PartyToken);
-                break;
-            case 5:
-                Debug.Log("Failed partyRequestConfirmation: Inexistent token");
-                Handler.Instance.OnPartyRequestConfirmationSender(5, oprcs.PartyToken);
-                break;
-            case 6:
-                Debug.Log("Failed partyRequestConfirmation: Sender not available");
-                Handler.Instance.OnPartyRequestConfirmationSender(6, oprcs.PartyToken);
-                break;
-            case 7:
-                Debug.Log("Failed partyRequestConfirmation: Receiver not available");
-                Handler.Instance.OnPartyRequestConfirmationSender(7, oprcs.PartyToken);
-                break;
-            case 8:
-                Debug.Log("Failed partyRequestConfirmation: Inexistent partyRequest");
-                Handler.Instance.OnPartyRequestConfirmationSender(8, oprcs.PartyToken);
-                break;
-            case 9:
-                Debug.Log("Failed partyRequestConfirmation: Inexistent party");
-                Handler.Instance.OnPartyRequestConfirmationSender(9, oprcs.PartyToken);
-                break;
-            case 10:
-                Debug.Log("Failed partyRequestConfirmation: Party not available");
-                Handler.Instance.OnPartyRequestConfirmationSender(10, oprcs.PartyToken);
-                break;
-        }
+        Debug.Log(LogManager.OnPartyRequestConfirmationSender(oprcs.FlagEnum));
+        Handler.Instance.OnPartyRequestConfirmationSender(oprcs.FlagEnum, oprcs.PartyToken);
+
+        if (oprcs.FlagEnum == 1)
+            myAccount.Status = 2;
     }
     private void OnPartyRequestConfirmationReceiver(Net_OnPartyRequestConfirmationReceiver oprcr)
     {
@@ -608,7 +323,7 @@ public class Client : MonoBehaviour
     }
     #endregion
 
-    #region Send
+    #region Requests
     public void SendServer(NetMsg msg)
     {
         byte[] buffer = new byte[BYTE_SIZE];
