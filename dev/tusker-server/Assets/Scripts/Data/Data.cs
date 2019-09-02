@@ -15,18 +15,16 @@ public class Data
         ShutdownDatabase();
     }
 
-    private const string MONGO_URI = "mongodb://NedLudd:Leleu2002@ds113765.mlab.com:13765/talesofthedata";
-    private const string DATABASE_NAME = "talesofthedata";
+    private const string MONGO_URI = "mongodb://tusker-server:uRQGT8FrYR7W7yQk@cluster0-shard-00-00-v4pz3.mongodb.net:27017,cluster0-shard-00-01-v4pz3.mongodb.net:27017,cluster0-shard-00-02-v4pz3.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true&w=majority";
+    private const string DATABASE_NAME = "tusker-server";
 
     private MongoClient client;
     private MongoServer server;
     private MongoDatabase db;
 
     private MongoCollection<Model_Account> accounts;
-    private MongoCollection<Model_Friend> friends;
-    private MongoCollection<Model_FriendRequest> friendRequests;
-    private MongoCollection<Model_Party> partys;
-    private MongoCollection<Model_PartyRequest> partyRequests;
+    private MongoCollection<Model_Friend> friendships;
+    private MongoCollection<Model_FriendRequest> friendshipRequests;
 
     private void InitDatabase()
     {
@@ -35,10 +33,8 @@ public class Data
         db = server.GetDatabase(DATABASE_NAME);
 
         accounts = db.GetCollection<Model_Account>("accounts");
-        friends = db.GetCollection<Model_Friend>("friends");
-        friendRequests = db.GetCollection<Model_FriendRequest>("friendRequests");
-        partys = db.GetCollection<Model_Party>("partys");
-        partyRequests = db.GetCollection<Model_PartyRequest>("partyRequests");
+        friendships = db.GetCollection<Model_Friend>("friendships");
+        friendshipRequests = db.GetCollection<Model_FriendRequest>("friendship-requests");
 
         Debug.Log("Database initialized");
     }
@@ -78,7 +74,7 @@ public class Data
             return null;
 
         List<Account> selfFriends = new List<Account>();
-        foreach (var f in friends.Find(Query.Or(
+        foreach (var f in friendships.Find(Query.Or(
             Query<Model_Friend>.EQ(f => f.Sender, self),
             Query<Model_Friend>.EQ(f => f.Receiver, self))))
         {
@@ -95,7 +91,7 @@ public class Data
         var self = new MongoDBRef("account", FindAccountByUsername(username)._id);
 
         List<Account> selfFriends = new List<Account>();
-        foreach (var f in friends.Find(Query.Or(
+        foreach (var f in friendships.Find(Query.Or(
             Query<Model_Friend>.EQ(f => f.Sender, self),
             Query<Model_Friend>.EQ(f => f.Receiver, self))))
         {
@@ -110,14 +106,14 @@ public class Data
     private List<Account> FindAllFriendRequestsByToken(string token)
     {
         List<Account> selfFriendRequests = new List<Account>();
-        foreach (var f in friendRequests.Find(Query<Model_FriendRequest>.EQ(f => f.Receiver, new MongoDBRef("account", FindAccountByToken(token)._id))))
+        foreach (var f in friendshipRequests.Find(Query<Model_FriendRequest>.EQ(f => f.Receiver, new MongoDBRef("account", FindAccountByToken(token)._id))))
             selfFriendRequests.Add(FindAccountByObjectId(f.Sender.Id.AsObjectId).GetAccount());
         return selfFriendRequests;
     }
     private List<Account> FindAllFriendRequestsByUsername(string username)
     {
         List<Account> selfFriendRequests = new List<Account>();
-        foreach (var f in friendRequests.Find(Query<Model_FriendRequest>.EQ(f => f.Receiver, new MongoDBRef("account", FindAccountByUsername(username)._id))))
+        foreach (var f in friendshipRequests.Find(Query<Model_FriendRequest>.EQ(f => f.Receiver, new MongoDBRef("account", FindAccountByUsername(username)._id))))
             selfFriendRequests.Add(FindAccountByObjectId(f.Sender.Id.AsObjectId).GetAccount());
         return selfFriendRequests;
     }
@@ -131,7 +127,7 @@ public class Data
                 Query<Model_Friend>.EQ(f => f.Sender, new MongoDBRef("account", receiverId)),
                 Query<Model_Friend>.EQ(f => f.Receiver, new MongoDBRef("account", senderId))));
 
-        return friends.FindOne(query);
+        return friendships.FindOne(query);
     }
     private Model_FriendRequest FindfriendRequest(ObjectId senderId, ObjectId receiverId)
     {
@@ -139,27 +135,7 @@ public class Data
                 Query<Model_FriendRequest>.EQ(f => f.Sender, new MongoDBRef("account", senderId)),
                 Query<Model_FriendRequest>.EQ(f => f.Receiver, new MongoDBRef("account", receiverId)));
 
-        return friendRequests.FindOne(query);
-    }
-    private Model_Party FindPartyByToken(string token)
-    {
-        return partys.FindOne(Query<Model_Party>.EQ(u => u.Token, token));
-    }
-    private Model_PartyRequest FindPartyRequest(ObjectId partyId, ObjectId senderId, ObjectId receiverId)
-    {
-        var query = Query.And(
-                Query<Model_PartyRequest>.EQ(p => p.Sender, new MongoDBRef("account", senderId)),
-                Query<Model_PartyRequest>.EQ(p => p.Receiver, new MongoDBRef("account", receiverId)),
-                Query<Model_PartyRequest>.EQ(p => p.Party, new MongoDBRef("party", partyId)));
-
-        return partyRequests.FindOne(query);
-    }
-    private List<Account> FindAllPartyRequestsByPartyId(ObjectId partyId)
-    {
-        List<Account> myPartyRequests = new List<Account>();
-        foreach (var f in partyRequests.Find(Query<Model_PartyRequest>.EQ(p => p.Party, new MongoDBRef("party", partyId))))
-            myPartyRequests.Add(FindAccountByObjectId(f.Receiver.Id.AsObjectId).GetAccount());
-        return myPartyRequests;
+        return friendshipRequests.FindOne(query);
     }
     #endregion
 
@@ -188,7 +164,7 @@ public class Data
                 Query<Model_Friend>.EQ(f => f.Sender, receiver),
                 Query<Model_Friend>.EQ(f => f.Receiver, sender)));
 
-        if (friends.FindOne(query) != null)
+        if (friendships.FindOne(query) != null)
             return 3;
 
         Model_Friend newFriendship = new Model_Friend
@@ -197,7 +173,7 @@ public class Data
             Receiver = receiver,
             Since = System.DateTime.Now
         };
-        friends.Insert(newFriendship);
+        friendships.Insert(newFriendship);
 
         return 1;
     }
@@ -213,7 +189,7 @@ public class Data
             Query<Model_FriendRequest>.EQ(u => u.Sender, sender),
             Query<Model_FriendRequest>.EQ(u => u.Receiver, receiver));
 
-        if (friends.FindOne(query) != null)
+        if (friendships.FindOne(query) != null)
             return 3;
 
         Model_FriendRequest newFriendRequest = new Model_FriendRequest
@@ -221,51 +197,7 @@ public class Data
             Sender = sender,
             Receiver = receiver
         };
-        friendRequests.Insert(newFriendRequest);
-
-        return 1;
-    }
-    private byte InsertParty(string token, ObjectId creatorID)
-    {
-        var creator = new MongoDBRef("account", creatorID);
-
-        Model_Party newParty = new Model_Party
-        {
-            Token = token,
-            Creator = creator,
-            Since = System.DateTime.Now,
-            Status = 1
-        };
-        partys.Insert(newParty);
-        return 1;
-    }
-    private byte InsertPartyRequest(ObjectId partyId, ObjectId senderId, ObjectId receiverId)
-    {
-        var party = new MongoDBRef("party", partyId);
-
-        var query = Query<Model_Party>.EQ(p => p._id, partyId);
-        if (partys.FindOne(query) == null)
-            return 2;
-
-        var sender = new MongoDBRef("account", senderId);
-        var receiver = new MongoDBRef("account", receiverId);
-
-        if (sender == receiver)
-            return 3;
-
-        query = Query.And(
-            Query<Model_PartyRequest>.EQ(u => u.Sender, sender),
-            Query<Model_PartyRequest>.EQ(u => u.Receiver, receiver));
-        if (partyRequests.FindOne(query) != null)
-            return 4;
-
-        Model_PartyRequest newPartyRequest = new Model_PartyRequest
-        {
-            Party = party,
-            Sender = sender,
-            Receiver = receiver
-        };
-        partyRequests.Insert(newPartyRequest);
+        friendshipRequests.Insert(newFriendRequest);
 
         return 1;
     }
@@ -280,14 +212,6 @@ public class Data
 
         accounts.Update(query, Update<Model_Account>.Replace(myAccount));
     }
-    private void UpdateParty(Model_Party myParty)
-    {
-        IMongoQuery query = null;
-
-        query = Query<Model_Party>.EQ(u => u._id, myParty._id);
-
-        accounts.Update(query, Update<Model_Party>.Replace(myParty));
-    }
     #endregion
 
     #region Delete
@@ -297,15 +221,11 @@ public class Data
     }
     private void DeleteFriend(ObjectId id)
     {
-        friends.Remove(Query<Model_Friend>.EQ(f => f._id, id));
+        friendships.Remove(Query<Model_Friend>.EQ(f => f._id, id));
     }
     private void DeleteFriendRequest(ObjectId id)
     {
-        friendRequests.Remove(Query<Model_FriendRequest>.EQ(f => f._id, id));
-    }
-    private void DeletePartyRequest(ObjectId id)
-    {
-        partyRequests.Remove(Query<Model_PartyRequest>.EQ(p => p._id, id));
+        friendshipRequests.Remove(Query<Model_FriendRequest>.EQ(f => f._id, id));
     }
     #endregion
 
@@ -326,7 +246,7 @@ public class Data
                 Query<Model_Friend>.EQ(f => f.Sender, friend2),
                 Query<Model_Friend>.EQ(f => f.Receiver, friend1)));
 
-        return friends.FindOne(query) != null;
+        return friendships.FindOne(query) != null;
     }
     private bool IsRequested(string username1, string username2)
     {
@@ -340,7 +260,7 @@ public class Data
             Query<Model_FriendRequest>.EQ(f => f.Sender, sender),
             Query<Model_FriendRequest>.EQ(f => f.Receiver, receiver));
 
-        return friendRequests.FindOne(query) != null;
+        return friendshipRequests.FindOne(query) != null;
     }
     private void UpdateAccount(Account account, string token)
     {
@@ -386,6 +306,7 @@ public class Data
         Server.Instance.SendFriendUpdate(account, target2);
         Server.Instance.SendFriendRequestUpdate(account, target3);
     }
+    /*
     private void UpdateParty(Party party, ObjectId partyId)
     {
         int[] targets1 = new int[party.MemberCount];
@@ -400,6 +321,7 @@ public class Data
         Server.Instance.SendPartyUpdate(party, targets1);
         Server.Instance.SendPartyRequestUpdate(party, targets2);
     }
+    */
     #endregion
 
     #region Operations
@@ -635,15 +557,20 @@ public class Data
 
         do
             partyToken = Helper.CreateToken(64);
-        while (FindPartyByToken(partyToken) != null);
+        while (false);//FindPartyByToken(partyToken) != null);
 
-        InsertParty(partyToken, account._id);
+        //InsertParty(partyToken, account._id);
 
-        UpdateAccount(account.GetAccount(), token);
+        //UpdateAccount(account.GetAccount(), token);
         return 1;
     }
     public byte PartyRequest(string partyToken, string token, string username, out byte id, out Party myParty, out string senderUsername)
     {
+        id = 0;
+        myParty = null;
+        senderUsername = null;
+        return 0;
+        /*
         id = 0;
         myParty = null;
         senderUsername = null;
@@ -680,9 +607,14 @@ public class Data
         for (int i = 1; i < myParty.MemberCount; i++)
             myParty.Members[i] = FindAccountByObjectId(party.Members[i].Id.AsObjectId).GetAccount();
         return 1;
+        */
     }
     public byte PartyRequestConfirmation(bool confirmation, string token, string senderUsername, string partyToken, out byte id, out string username)
     {
+        id = 0;
+        username = null;
+        return 0;
+        /*
         id = 0;
         username = null;
 
@@ -738,6 +670,7 @@ public class Data
         UpdateParty(myParty, party._id);
         UpdateAccount(receiver.GetAccount(), receiver.Token);
         return 1;
+        */
     }
     #endregion
 }

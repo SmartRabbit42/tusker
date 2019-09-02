@@ -12,7 +12,7 @@ public class Server : MonoBehaviour
     private const int PORT = 4242;
     private const int BYTE_SIZE = 1024;
 
-    private readonly string welcomeMessage = "Welcome to Tales of the Fallen";
+    private readonly string welcomeMessage = "Welcome to Tusker";
     private byte serverStatus = 0;
 
     private byte reliableChannel;
@@ -522,3 +522,4 @@ public class Server : MonoBehaviour
     }
     #endregion
 }
+    

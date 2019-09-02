@@ -14,6 +14,7 @@ public class Handler : MonoBehaviour
         StartLoading("Connecting to server...");
     }
 
+
     #region Helper
     private void StartLoading(string msg)
     {
