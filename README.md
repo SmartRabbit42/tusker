@@ -1,3 +1,3 @@
 # tusker
 
-Roguelike MOBA game
+Roguelike MOBA game.
